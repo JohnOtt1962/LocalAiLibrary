@@ -7,6 +7,6 @@ namespace LocalAiLibrary.AiLibrary
         Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt,
             string? toolUser = null, bool cacheChat = true);
 
-        Task ProcessCategories(string jsonPrompt);
+        Task ProcessCategories();
     }
 }

@@ -20,7 +20,7 @@ namespace LocalAiLibrary.AiLibrary
             }
         }
 
-        public async Task ProcessCategories(string jsonPrompt)
+        public async Task ProcessCategories()
         {
             try
             {
