@@ -1,5 +1,4 @@
-﻿using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
-using LocalAiLibrary.AiLibrary.ChatService.Models;
+﻿using LocalAiLibrary.AiLibrary.ChatService.Models;
 
 namespace LocalAiLibrary.AiLibrary
 {
@@ -8,6 +7,6 @@ namespace LocalAiLibrary.AiLibrary
         Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt,
             string? toolUser = null, bool cacheChat = true);
 
-        Task<List<CategorizedChatEntry>?> MakeAiCallAsync(string jsonPrompt);
+        Task ProcessCategories(string jsonPrompt);
     }
 }

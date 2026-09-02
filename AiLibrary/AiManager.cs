@@ -1,11 +1,10 @@
-﻿using LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryService;
-using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
+﻿using LocalAiLibrary.AiLibrary.CategoryClassification;
 using LocalAiLibrary.AiLibrary.ChatService;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
 
 namespace LocalAiLibrary.AiLibrary
 {
-    public class AiManager(IAiCommunicationManager aiCommunicationManager, IAiCategoryManager aiCategoryManager) : IAiManager
+    public class AiManager(IAiCommunicationManager aiCommunicationManager, IManageChatEntryClassificationService aiCategoryService) : IAiManager
     {
         public async Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt,
             string? toolUser = null, bool cacheChat = true)
@@ -21,19 +20,17 @@ namespace LocalAiLibrary.AiLibrary
             }
         }
 
-        public async Task<List<CategorizedChatEntry>?> MakeAiCallAsync(string jsonPrompt)
+        public async Task ProcessCategories(string jsonPrompt)
         {
             try
             {
-                return await aiCategoryManager.MakeAiCallAsync(jsonPrompt);
+                await aiCategoryService.ProcessCategories();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"MakeAiCallAsync failed: {ex}");
                 throw;
             }
-
-            return null;
         }
     }
 }

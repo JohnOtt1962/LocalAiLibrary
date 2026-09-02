@@ -5,6 +5,20 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageId>JohnOtt.LocalAiLibrary</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>John Ott</Authors>
+    <Description>AI Library used to support a local AI model.</Description>
+    <RepositoryUrl>https://github.com/JohnOtt1962/Utilities</RepositoryUrl>
+    <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="docs\README.md" Pack="true" PackagePath="docs\" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="AiLibrary\AiEmail.cs" />
