@@ -1,11 +1,12 @@
-﻿using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
-using LocalAiLibrary.AiLibrary.Network;
+﻿using LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService;
+using LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryService;
+using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace LocalAiLibrary.AiLibrary.CategoryClassification
 {
-    public class ManageChatEntryClassificationService(IOptions<AiChatCategoryConfig> config, IAiChatCategoryDataHelper buildCategoryPrompt,
+    public class ManageChatEntryClassificationService(IOptions<AiChatCategoryConfig> config, IAiChatCategoryRepo buildCategoryPrompt,
         IAiCategoryManager categoryManager) : IManageChatEntryClassificationService
     {
         private readonly AiChatCategoryConfig _config = config.Value;

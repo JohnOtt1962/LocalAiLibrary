@@ -1,34 +1,33 @@
-﻿using LocalAiLibrary.AiLibrary.AI_Models;
-using System.Text.Json;
+﻿using LocalAiLibrary.AiLibrary.AITools.Command;
+using LocalAiLibrary.AiLibrary.AITools.Db;
+using LocalAiLibrary.AiLibrary.AITools.Email;
+using LocalAiLibrary.AiLibrary.AITools.Models;
+using LocalAiLibrary.AiLibrary.ChatService.Models;
+using Microsoft.Extensions.Options;
 using Utilities.Email;
+using Utilities.Repo;
 
 namespace LocalAiLibrary.AiLibrary.AITools
 {
-    internal class ToolManager(IEmail aiEmail)
+    internal class ToolManager(IEmail aiEmail, IRepo repo, IOptions<AiConfig> config)
     {
-        private readonly IEmail _aiEmail = aiEmail;
+        private readonly IEmailTool _emailTool = new EmailTool(aiEmail);
+        private readonly ISchemaTool _schemaTool = new SchemaTool(repo, config);
+        private readonly IDbReadTool _dbReadTool = new DbReadTool(repo, config);
+        private readonly ICommandProcess _commandProcess = new CommandProcess();
 
         public List<ToolCommand> GetToolCommands(ChatCompletionResponse response)
         {
             List<ToolCommand> commands = new List<ToolCommand>();
 
-            string finishReason = response.Choices[0].FinishReason;
-            bool hasToolCalls = response.Choices[0].Message.ToolCalls != null &&
-                                response.Choices[0].Message.ToolCalls!.Count > 0;
-
-            if (finishReason == "tool_calls" && hasToolCalls)
+            try
             {
-                foreach (var item in response.Choices[0].Message.ToolCalls!)
-                {
-                    ToolCommand command = new ToolCommand()
-                    {
-                        ToolName = item.Function.Name,
-                        ToolArgs = item.Function.Arguments,
-                        ToolCallId = item.Id
-                    };
-
-                    commands.Add(command);
-                }
+                commands = _commandProcess.GetToolCommands(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetToolCommands failed: {ex}");
+                throw;
             }
 
             return commands;
@@ -36,29 +35,53 @@ namespace LocalAiLibrary.AiLibrary.AITools
 
         public string SendEmail(ToolCommand command)
         {
-            string returnMessage = string.Empty;
+            string retMessage;
 
-            var options = new JsonSerializerOptions
+            try
             {
-                PropertyNameCaseInsensitive = true
-            };
-
-            EmailModel aiEmailModel = new EmailModel
+                retMessage = _emailTool.SendEmail(command);
+            }
+            catch (Exception ex)
             {
-                ToolName = command.ToolName,
-                Args = JsonSerializer.Deserialize<ToolArgs>(command.ToolArgs, options)!
-            };
-
-            bool isSuccess = _aiEmail.SendMail(aiEmailModel).GetAwaiter().GetResult();
-
-            if (isSuccess)
-            {
-                string template =
-                    "The email to $ToAddress$ has been successfully sent. Please briefly and cheerfully confirm to the user that the email has been delivered.";
-                returnMessage = template.Replace("$ToAddress$", aiEmailModel.Args.To);
+                Console.WriteLine($"SendEmail failed: {ex}");
+                throw;
             }
 
-            return returnMessage;
+            return retMessage;
+        }
+
+        public string GetSchema(ToolCommand command)
+        {
+            string retMessage;
+
+            try
+            {
+                retMessage = _schemaTool.GetSchema(command);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetSchema failed: {ex}");
+                throw;
+            }
+
+            return retMessage;
+        }
+
+        public string ReadDatabase(ToolCommand command)
+        {
+            string retMessage;
+
+            try
+            {
+                retMessage = _dbReadTool.ReadDatabase(command);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ReadDatabase failed: {ex}");
+                throw;
+            }
+
+            return retMessage;
         }
     }
 }
