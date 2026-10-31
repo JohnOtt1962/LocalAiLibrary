@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using LocalAiLibrary.AiLibrary.AiDbService;
+using LocalAiLibrary.AiLibrary.Helpers;
 using Utilities.Repo;
 using Utilities.Repo.Model;
 
@@ -12,7 +13,7 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
         private readonly DbOps _repoHelper = new();
         private readonly AiChatCategoryConfig _config = config.Value;
 
-        public List<ChatCategory> GetChatCategories()
+        public async Task<List<ChatCategory>> GetChatCategories()
         {
             var options = new JsonSerializerOptions
             {
@@ -20,14 +21,17 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
             };
 
             EntityOps ops = _repoHelper.GetEntityOps(_config.ProcGetChatCategories, _config.ConnectionString);
-            var result = repo.GetCollection(ops);
+            var result = await repo.GetCollection(ops);
             string jsonResponse = JsonSerializer.Serialize(result);
-            List<ChatCategory> categories = JsonSerializer.Deserialize<List<ChatCategory>>(jsonResponse, options);
+            List<ChatCategory> categories = DeserializerHelper.DeserializeItem<List<ChatCategory>>(jsonResponse, options)!;
+
+            if (categories == null)
+                categories = new List<ChatCategory>();
 
             return categories;
         }
 
-        public List<DateItem> GetChatDates()
+        public async Task<List<DateItem>> GetChatDates()
         {
             var options = new JsonSerializerOptions
             {
@@ -35,14 +39,17 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
             };
 
             EntityOps ops = _repoHelper.GetEntityOps(_config.ProcGetUncategorizedChatDates, _config.ConnectionString);
-            var result = repo.GetCollection(ops);
+            var result = await repo.GetCollection(ops);
             string jsonResponse = JsonSerializer.Serialize(result);
-            List<DateItem> dateList = JsonSerializer.Deserialize<List<DateItem>>(jsonResponse, options);
+            List<DateItem> dateList = DeserializerHelper.DeserializeItem<List<DateItem>>(jsonResponse, options)!;
+
+            if (dateList == null)
+                dateList = new List<DateItem>();
 
             return dateList;
         }
 
-        public List<UncategorizedChat> GetUncategorizedChatForDate(string date)
+        public async Task<List<UncategorizedChat>> GetUncategorizedChatForDate(string date)
         {
             var options = new JsonSerializerOptions
             {
@@ -55,14 +62,17 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
                 _repoHelper.GetParamItem("DateFilter", date, false, "varchar", 1),
             };
 
-            var result = repo.GetCollection(ops);
+            var result = await repo.GetCollection(ops);
             string jsonResponse = JsonSerializer.Serialize(result);
-            List<UncategorizedChat> chatItems = JsonSerializer.Deserialize<List<UncategorizedChat>>(jsonResponse, options);
+            List<UncategorizedChat> chatItems = DeserializerHelper.DeserializeItem<List<UncategorizedChat>>(jsonResponse, options)!;
+
+            if(chatItems == null)
+                chatItems = new List<UncategorizedChat>();
 
             return chatItems;
         }
 
-        public int SetChatCategory(int chatId, int categoryId)
+        public async Task<int> SetChatCategory(int chatId, int categoryId)
         {
             var options = new JsonSerializerOptions
             {
@@ -76,7 +86,7 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
                 _repoHelper.GetParamItem("CategoryId", Convert.ToString(categoryId), false, "int", 1)
             };
 
-            var result = repo.Insert(ops);
+            var result = await repo.Insert(ops);
 
             return result;
         }

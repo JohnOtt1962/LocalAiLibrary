@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
 
-namespace LocalAiLibrary.AiLibrary.AI_Models.ModelValidation
+namespace LocalAiLibrary.AiLibrary.Validation.ModelValidation
 {
     public static class ResponseReturnChecker
     {

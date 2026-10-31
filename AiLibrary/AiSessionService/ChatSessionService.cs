@@ -1,35 +1,57 @@
-﻿using System.Text.Json;
-using LocalAiLibrary.AiLibrary.AiDbService;
+﻿using LocalAiLibrary.AiLibrary.AiDbService;
 using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
-using Microsoft.AspNetCore.Http;
+using LocalAiLibrary.AiLibrary.Helpers;
+using LocalAiLibrary.AiLibrary.Orchestration.Models;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace LocalAiLibrary.AiLibrary.AiSessionService;
 
-public class ChatSessionService(IHttpContextAccessor httpContextAccessor, IAiRepo aiRepo, IOptions<AiConfig> config)
+public class ChatSessionService(IAiRepo aiRepo, IOptions<AiConfig> config, ISessionStore sessionStore)
     : IChatSessionService
 {
     private const string SessionKey = "ChatHistory";
     private const string SessionCategoriesKey = "SessionCategories";
+    private const string OrchestrationPlanKey = "OrchestrationPlanKey";
     private readonly AiConfig _config = config.Value;
     private readonly DbOps _repoHelper = new();
 
-    private ISession Session => httpContextAccessor.HttpContext!.Session;
-
-    public List<ChatRequestMessage> GetHistory(string selectedCategoryId)
+    public void SaveOrchestration(OrchestrationPlan orchestrationPlan)
     {
-        var json = Session.GetString(SessionKey);
-        List<ChatRequestMessage> messages = new List<ChatRequestMessage>();
+        var json = JsonSerializer.Serialize(orchestrationPlan);
+        sessionStore.SaveObject(OrchestrationPlanKey, json);
+    }
+
+    public OrchestrationPlan? GetOrchestration()
+    {
+        OrchestrationPlan? orchestrationPlan = null;
+        var json = sessionStore.GetObject(OrchestrationPlanKey);
+
+        if (!string.IsNullOrEmpty(json))
+            orchestrationPlan = DeserializerHelper.DeserializeItem<OrchestrationPlan>(json);
+
+        return orchestrationPlan;
+    }
+
+    public void ClearOrchestration()
+    {
+        sessionStore.ClearObject(OrchestrationPlanKey);
+    }
+
+    public async Task<List<ChatRequestMessage>> GetHistory(string selectedCategoryId)
+    {
+        var json = sessionStore.GetObject(SessionKey);
+        List<ChatRequestMessage>? messages = new List<ChatRequestMessage>();
 
         if (string.IsNullOrEmpty(json))
         {
             if (_config.EnableDbCaching)
-                messages = aiRepo.GetConversationHistoryFromDb(selectedCategoryId);
+                messages = await aiRepo.GetConversationHistoryFromDb(selectedCategoryId);
         }
         else
         {
-            messages = JsonSerializer.Deserialize<List<ChatRequestMessage>>(json)!;
+            messages = DeserializerHelper.DeserializeItem<List<ChatRequestMessage>>(json)!;
         }
 
         return messages;
@@ -38,25 +60,25 @@ public class ChatSessionService(IHttpContextAccessor httpContextAccessor, IAiRep
     public void SaveHistory(List<ChatRequestMessage> history)
     {
         var json = JsonSerializer.Serialize(history);
-        Session.SetString(SessionKey, json);
+        sessionStore.SaveObject(SessionKey, json);
     }
 
-    public List<ChatCategory> GetCategories()
+    public async Task<List<ChatCategory>?> GetCategories()
     {
-        var json = Session.GetString(SessionCategoriesKey);
+        var json = sessionStore.GetObject(SessionCategoriesKey);
         List<ChatCategory>? categories = new List<ChatCategory>();
 
         if (string.IsNullOrEmpty(json))
         {
             if (_config.EnableDbCaching)
             {
-                categories = aiRepo.GetChatCategories();
-                SaveCategories(categories);
+                categories = await aiRepo.GetChatCategories();
+                if (categories != null) SaveCategories(categories);
             }
         }
         else
         {
-            categories = JsonSerializer.Deserialize<List<ChatCategory>>(json);
+            categories = DeserializerHelper.DeserializeItem<List<ChatCategory>>(json);
         }
 
         return categories;
@@ -65,11 +87,11 @@ public class ChatSessionService(IHttpContextAccessor httpContextAccessor, IAiRep
     public void SaveCategories(List<ChatCategory> categories)
     {
         var json = JsonSerializer.Serialize(categories);
-        Session.SetString(SessionCategoriesKey, json);
+        sessionStore.SaveObject(SessionCategoriesKey, json);
     }
 
     public void ClearHistory()
     {
-        Session.Remove(SessionKey);
+        sessionStore.ClearObject(SessionKey);
     }
 }

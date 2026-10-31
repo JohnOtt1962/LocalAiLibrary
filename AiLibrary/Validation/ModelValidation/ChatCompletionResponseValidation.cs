@@ -29,9 +29,9 @@ namespace LocalAiLibrary.AiLibrary.AI_Models.ModelValidation
                 .NotEmpty()
                 .WithMessage("The returned role in the response was empty");
 
-            RuleFor(chatChoice => chatChoice.Message.Content)
-                .NotEmpty()
-                .When(chatChoice => chatChoice.FinishReason != "tool_calls");
+            //RuleFor(chatChoice => chatChoice.Message.Content)
+            //    .NotEmpty()
+            //    .When(chatChoice => chatChoice.FinishReason != "tool_calls");
 
             RuleFor(chatChoice => chatChoice.FinishReason)
                 .NotEmpty()

@@ -4,9 +4,8 @@ namespace LocalAiLibrary.AiLibrary
 {
     public interface IAiManager
     {
-        Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt,
-            string? toolUser = null, bool cacheChat = true);
-
+        Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt);
         Task ProcessCategories();
+        Task ProcessChatEmails();
     }
 }

@@ -1,12 +1,14 @@
 ﻿using LocalAiLibrary.AiLibrary.AITools.Models;
 using System.Text.Json;
-using Utilities.Email;
+using LocalAiLibrary.AiLibrary.Helpers;
+using Utilities.Email.EmailOperations;
+using Utilities.Email.Models;
 
 namespace LocalAiLibrary.AiLibrary.AITools.Email
 {
     public class EmailTool(IEmail aiEmail) : IEmailTool
     {
-        public string SendEmail(ToolCommand command)
+        public async Task<string> SendEmail(ToolCommand command)
         {
             string returnMessage = string.Empty;
 
@@ -18,10 +20,10 @@ namespace LocalAiLibrary.AiLibrary.AITools.Email
             EmailModel aiEmailModel = new EmailModel
             {
                 ToolName = command.ToolName,
-                Args = JsonSerializer.Deserialize<ToolArgs>(command.ToolArgs, options)!
+                Args = DeserializerHelper.DeserializeItem<ToolArgs>(command.ToolArgs, options)!
             };
 
-            bool isSuccess = aiEmail.SendMail(aiEmailModel).GetAwaiter().GetResult();
+            bool isSuccess = await aiEmail.SendMail(aiEmailModel);
 
             if (isSuccess)
             {

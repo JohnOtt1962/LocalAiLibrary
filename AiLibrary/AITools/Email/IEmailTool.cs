@@ -4,6 +4,6 @@ namespace LocalAiLibrary.AiLibrary.AITools.Email
 {
     public interface IEmailTool
     {
-        string SendEmail(ToolCommand command);
+        Task<string> SendEmail(ToolCommand command);
     }
 }

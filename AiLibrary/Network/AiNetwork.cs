@@ -1,5 +1,6 @@
 ﻿using LocalAiLibrary.AiLibrary.ChatService.Models;
 using System.Text.Json;
+using LocalAiLibrary.AiLibrary.Helpers;
 using Utilities.Network;
 
 namespace LocalAiLibrary.AiLibrary.Network
@@ -14,7 +15,7 @@ namespace LocalAiLibrary.AiLibrary.Network
 
             if (result.CallSuccess && !string.IsNullOrEmpty(result.JsonResponse))
             {
-                responseRecord = JsonSerializer.Deserialize<ChatCompletionResponse>(result.JsonResponse);
+                responseRecord = DeserializerHelper.DeserializeItem<ChatCompletionResponse>(result.JsonResponse);
             }
             else
             {

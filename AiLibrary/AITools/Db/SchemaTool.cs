@@ -2,6 +2,7 @@
 using LocalAiLibrary.AiLibrary.AiDbService;
 using LocalAiLibrary.AiLibrary.AITools.Models;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
+using LocalAiLibrary.AiLibrary.Helpers;
 using Microsoft.Extensions.Options;
 using Utilities.Repo;
 using Utilities.Repo.Model;
@@ -13,7 +14,7 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
         private readonly DbOps _repoHelper = new();
         private readonly AiConfig _config = config.Value;
 
-        public string GetSchema(ToolCommand command)
+        public string GetSchema(ToolCommand command, string filter)
         {
             string returnMessage = string.Empty;
 
@@ -25,10 +26,14 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
             SchemaCommandModel schemaModel = new SchemaCommandModel
             {
                 ToolName = command.ToolName,
-                Args = JsonSerializer.Deserialize<SchemaToolArgs>(command.ToolArgs, options)!
+                Args = DeserializerHelper.DeserializeItem<SchemaToolArgs>(command.ToolArgs, options)!
             };
 
-            EntityOps ops = _repoHelper.GetEntityOps("GetPersonAddressSchema", _config.AdventureWorksConnectionString);
+            EntityOps ops = _repoHelper.GetEntityOps("GetSchemaByDomain", _config.AdventureWorksConnectionString);
+            ops.Params = new List<ParamItem>
+            {
+                _repoHelper.GetParamItem("Filter", filter, false, "varchar", 1),
+            };
 
             var result = repo.GetCollection(ops);
             string jsonResult = JsonSerializer.Serialize(result);

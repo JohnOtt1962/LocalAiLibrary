@@ -5,8 +5,11 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
 {
     public interface IAiRepo
     {
-        List<ChatRequestMessage> GetConversationHistoryFromDb(string selectedCategoryId);
-        List<ChatCategory> GetChatCategories();
-        void InsertConversationFragment(string role, string content);
+        Task<List<ChatRequestMessage>> GetConversationHistoryFromDb(string selectedCategoryId);
+        Task<List<ChatCategory>?> GetChatCategories();
+        Task InsertConversationFragment(string role, string content);
+        Task RemoveConversationFragment();
+        Task<List<ChatRequestMessage>> GetGemmaEmailChatItem(string participant);
+        Task InsertGemmaEmailChatItem(string participant, string content, string role);
     }
 }

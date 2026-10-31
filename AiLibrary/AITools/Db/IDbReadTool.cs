@@ -4,6 +4,6 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
 {
     public interface IDbReadTool
     {
-        string ReadDatabase(ToolCommand command);
+        Task<string> ReadDatabase(ToolCommand command);
     }
 }

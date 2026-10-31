@@ -4,6 +4,6 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
 {
     public interface ISchemaTool
     {
-        string GetSchema(ToolCommand command);
+        string GetSchema(ToolCommand command, string filter);
     }
 }

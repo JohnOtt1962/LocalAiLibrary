@@ -13,23 +13,24 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification
 
         public async Task ProcessCategories()
         {
-            List<DateItem> dates = buildCategoryPrompt.GetChatDates();
+            List<DateItem> dates = await buildCategoryPrompt.GetChatDates();
 
-            AiCategorizationPayload payload = new AiCategorizationPayload
+            if (dates is { Count: > 0 })
             {
-                CategoryPrompt = _config.CategoryPrompt,
-                Categories = buildCategoryPrompt.GetChatCategories(),
-                UncategorizedChats = new List<UncategorizedChat>()
-            };
+                AiCategorizationPayload payload = new AiCategorizationPayload
+                {
+                    CategoryPrompt = _config.CategoryPrompt,
+                    Categories = await buildCategoryPrompt.GetChatCategories(),
+                    UncategorizedChats = new List<UncategorizedChat>()
+                };
 
-            List<CategorizedChatEntry> categorizedEntries = await ProcessDatesAsync(dates, payload);
+                List<CategorizedChatEntry> categorizedEntries = await ProcessDatesAsync(dates, payload);
 
-            foreach (CategorizedChatEntry item in categorizedEntries)
-            {
-                buildCategoryPrompt.SetChatCategory(item.ChatId, item.CategoryId);
+                foreach (CategorizedChatEntry item in categorizedEntries)
+                {
+                    await buildCategoryPrompt.SetChatCategory(item.ChatId, item.CategoryId);
+                }
             }
-
-            string jsonPrompt = JsonSerializer.Serialize(categorizedEntries);
         }
 
         private async Task<List<CategorizedChatEntry>> ProcessDatesAsync(List<DateItem> dates, AiCategorizationPayload payload)
@@ -38,7 +39,7 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification
             
             foreach (DateItem dateItem in dates)
             {
-                payload.UncategorizedChats = buildCategoryPrompt.GetUncategorizedChatForDate(dateItem.DateFilter);
+                payload.UncategorizedChats = await buildCategoryPrompt.GetUncategorizedChatForDate(dateItem.DateFilter);
                 string jsonPrompt = JsonSerializer.Serialize(payload);
 
                 categorizedEntries.AddRange(await categoryManager.MakeAiCallAsync(jsonPrompt) ?? new List<CategorizedChatEntry>());

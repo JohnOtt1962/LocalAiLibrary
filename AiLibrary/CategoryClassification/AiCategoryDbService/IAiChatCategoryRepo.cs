@@ -4,9 +4,9 @@ namespace LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryDbService
 {
     public interface IAiChatCategoryRepo
     {
-        List<ChatCategory> GetChatCategories();
-        List<DateItem> GetChatDates();
-        List<UncategorizedChat> GetUncategorizedChatForDate(string date);
-        int SetChatCategory(int chatId, int categoryId);
+        Task<List<ChatCategory>> GetChatCategories();
+        Task<List<DateItem>> GetChatDates();
+        Task<List<UncategorizedChat>> GetUncategorizedChatForDate(string date);
+        Task<int> SetChatCategory(int chatId, int categoryId);
     }
 }

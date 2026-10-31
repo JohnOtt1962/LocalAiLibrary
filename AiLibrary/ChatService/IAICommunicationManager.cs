@@ -4,7 +4,6 @@ namespace LocalAiLibrary.AiLibrary.ChatService
 {
     public interface IAiCommunicationManager
     {
-        Task MakeAiCallAsync(List<ChatRequestMessage> ConversationHistory, string userPrompt, string? toolUser = null,
-            bool cacheChat = true);
+        Task MakeAiCallAsync(List<ChatRequestMessage> ConversationHistory, string userPrompt);
     }
 }

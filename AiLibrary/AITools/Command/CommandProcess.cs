@@ -8,7 +8,6 @@ namespace LocalAiLibrary.AiLibrary.AITools.Command
         public List<ToolCommand> GetToolCommands(ChatCompletionResponse response)
         {
             List<ToolCommand> commands = new List<ToolCommand>();
-
             string finishReason = response.Choices[0].FinishReason;
             bool hasToolCalls = response.Choices[0].Message.ToolCalls != null &&
                                 response.Choices[0].Message.ToolCalls!.Count > 0;
