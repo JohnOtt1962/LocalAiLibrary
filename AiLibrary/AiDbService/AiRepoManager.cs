@@ -70,7 +70,7 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
 
             try
             {
-                await _aiRepo.GetChatCategories();
+                chatCategories = await _aiRepo.GetChatCategories();
             }
             catch (Exception ex)
             {

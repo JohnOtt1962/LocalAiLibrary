@@ -3,11 +3,12 @@ using LocalAiLibrary.AiLibrary.CategoryClassification.AiCategoryService;
 using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Utilities.Logger;
 
 namespace LocalAiLibrary.AiLibrary.CategoryClassification
 {
     public class ManageChatEntryClassificationService(IOptions<AiChatCategoryConfig> config, IAiChatCategoryRepo buildCategoryPrompt,
-        IAiCategoryManager categoryManager) : IManageChatEntryClassificationService
+        IAiCategoryManager categoryManager, IUtilLogger logger) : IManageChatEntryClassificationService
     {
         private readonly AiChatCategoryConfig _config = config.Value;
 
