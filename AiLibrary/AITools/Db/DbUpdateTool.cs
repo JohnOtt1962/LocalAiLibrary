@@ -1,15 +1,16 @@
 ﻿using LocalAiLibrary.AiLibrary.AiDbService;
+using LocalAiLibrary.AiLibrary.AiSessionService;
 using LocalAiLibrary.AiLibrary.AITools.Models;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
+using LocalAiLibrary.AiLibrary.Helpers;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
-using LocalAiLibrary.AiLibrary.Helpers;
 using Utilities.Repo;
 using Utilities.Repo.Model;
 
 namespace LocalAiLibrary.AiLibrary.AITools.Db
 {
-    public class DbUpdateTool(IRepo repo, IOptions<AiConfig> config) : IDbUpdateTool
+    public class DbUpdateTool(IRepo repo, IOptions<AiConfig> config, IChatSessionService chatSessionService) : IDbUpdateTool
     {
         private readonly DbOps _repoHelper = new();
         private readonly AiConfig _config = config.Value;
@@ -29,7 +30,9 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
                 Args = DeserializerHelper.DeserializeItem<SchemaToolArgs>(command.ToolArgs, options)!
             };
 
-            EntityOps ops = _repoHelper.GetEntityOps(schemaModel.Args.Sql, _config.AdventureWorksConnectionString);
+            string connectionString = ToolConfigReconciliation.GetConnectionString(chatSessionService, _config);
+
+            EntityOps ops = _repoHelper.GetEntityOps(schemaModel.Args.Sql, connectionString);
             ops.IsStoredProc = false;
 
             await repo.Update(ops);
@@ -37,7 +40,7 @@ namespace LocalAiLibrary.AiLibrary.AITools.Db
             CollectionResponse response = new CollectionResponse
             {
                 Prompt = "provide a mildly agitated declaration of mission completion",
-                Collection = null
+                Result = null
             };
 
             var jsonString = JsonSerializer.Serialize(response);

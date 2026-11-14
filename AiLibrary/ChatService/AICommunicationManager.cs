@@ -22,6 +22,7 @@ namespace LocalAiLibrary.AiLibrary.ChatService
 
         public async Task MakeAiCallAsync(List<ChatRequestMessage> conversationHistory, string userPrompt)
         {
+            _checkOrchestration = true;
             await promptHelper.InsertConversationFragment("user", userPrompt);
             promptHelper.AddPromptToActiveContext(conversationHistory, "user", userPrompt, string.Empty);
 
@@ -82,6 +83,8 @@ namespace LocalAiLibrary.AiLibrary.ChatService
         {
             var toolOperation = ChatRequestBuilder.ToolOperation.CheckOrchestration;
             if (!_checkOrchestration) toolOperation = ChatRequestBuilder.ToolOperation.GetToolList;
+            if(conversationHistory[^1].Content.IndexOf("NO TOOL CALLS", StringComparison.Ordinal) > 0)
+                toolOperation = ChatRequestBuilder.ToolOperation.IncludeNoTools;
 
             var request = ChatRequestBuilder.BuildAndValidate(requestValidator, _config.ModelName,
                 _config.MaxTokens, conversationHistory, toolOperation);

@@ -1,4 +1,5 @@
-﻿using LocalAiLibrary.AiLibrary.CategoryClassification;
+﻿using LocalAiLibrary.AiLibrary.AiSessionService;
+using LocalAiLibrary.AiLibrary.CategoryClassification;
 using LocalAiLibrary.AiLibrary.ChatService;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
 using LocalAiLibrary.AiLibrary.EmailChatService;
@@ -8,7 +9,8 @@ using Utilities.Logger;
 namespace LocalAiLibrary.AiLibrary
 {
     public class AiManager(IAiCommunicationManager aiCommunicationManager, IManageChatEntryClassificationService aiCategoryService,
-        IOutstandingChatEmails outstandingChatEmails, IUtilLogger logger, IOptions<AiConfig> config) : IAiManager
+        IOutstandingChatEmails outstandingChatEmails, IUtilLogger logger, IOptions<AiConfig> config,
+        IChatSessionService chatSesionService) : IAiManager
     {
         private readonly AiConfig _config = config.Value;
 

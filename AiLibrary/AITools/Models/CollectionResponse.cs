@@ -2,7 +2,7 @@
 {
     public class CollectionResponse
     {
-        public required string Prompt { get; set; }
-        public required string Collection { get; set; }
+        public string Prompt { get; set; }
+        public string Result { get; set; }
     }
 }

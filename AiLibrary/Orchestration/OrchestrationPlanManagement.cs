@@ -23,6 +23,9 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
                 orchestrationPlan = GetOrchestrationPlan(functionArguments);
                 if (orchestrationPlan != null)
                     chatSessionService.SaveOrchestration(orchestrationPlan);
+
+                //if (orchestrationPlan != null)
+                //    ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
             }
 
             return orchestrationPlan;
@@ -33,6 +36,7 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
             string chatPrompt = string.Empty;
 
             OrchestrationPlan? orchestrationPlan = chatSessionService.GetOrchestration();
+            //OrchestrationPlan? orchestrationPlan = ChatSessionService1.GetOrchestrationPlan();
 
             if (orchestrationPlan != null)
             {
@@ -55,26 +59,28 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
 
                 if (itemToProcess.DependsOnIndices.Count > 0)
                 {
-                    int index = itemToProcess.DependsOnIndices[0];
-                    string payloadName = "result" + index.ToString();
-                    string jsonPayload = orchestrationPlan.PayloadItems
-                        .FirstOrDefault(y => y.ItemName == payloadName)!.Payload;
-
                     DataChat dataChat = new DataChat
                     {
                         Prompt = itemToProcess.Prompt,
-                        PayloadItems = new List<string>
-                        {
-                            jsonPayload
-                        }
+                        PayloadItems = new List<string>()
                     };
+
+                    foreach (var index in itemToProcess.DependsOnIndices)
+                    {
+                        string payloadName = "result" + index.ToString();
+                        string jsonPayload = orchestrationPlan.PayloadItems
+                            .FirstOrDefault(y => y.ItemName == payloadName)!.Payload;
+
+                        dataChat.PayloadItems.Add(jsonPayload);
+                    }
 
                     chatPrompt = JsonSerializer.Serialize(dataChat);
                 }
 
                 itemToProcess.ItemStatus = Status.Pending;
                 chatSessionService.SaveOrchestration(orchestrationPlan);
-            } 
+                //ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
+            }
             else if (currentPendingItem != null)
             {
                 chatPrompt = currentPendingItem.Prompt;
@@ -87,10 +93,11 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
             return chatPrompt;
         }
 
-        public string CacheToolResponse(string returnMessage, bool isDataCall)
+        public string CacheToolResponse(string returnMessage, bool isDataCall, string callType)
         {
             bool hasError = (returnMessage?.IndexOf("ERROR") > -1) ? true : false;
             OrchestrationPlan? orchestrationPlan = chatSessionService.GetOrchestration();
+            //OrchestrationPlan? orchestrationPlan = ChatSessionService1.GetOrchestrationPlan();
 
             string jsonOrch = JsonSerializer.Serialize(orchestrationPlan);
             File.AppendAllText("D:\\Repos\\LocalAiChat_3\\LocalAiChat_3\\LogFile.txt", jsonOrch + Environment.NewLine + Environment.NewLine);
@@ -106,6 +113,8 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
 
                     if (!string.IsNullOrEmpty(callIndex))
                     {
+                        CollectionResponse response = new CollectionResponse();
+
                         if (!string.IsNullOrEmpty(returnMessage) && isDataCall)
                         {
                             string payloadItemName = "result" + callIndex;
@@ -117,18 +126,37 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
 
                             orchestrationPlan.PayloadItems.Add(payloadItem);
 
-                            CollectionResponse response = new CollectionResponse
+                            if (callType == "collection")
                             {
-                                Prompt = "Present the results as an HTML table. Make the heading gray.",
-                                Collection = returnMessage
-                            };
-
+                                response.Prompt = "Present the results as an HTML table. Make the heading gray background color gray. Do not use MarkDown";
+                                response.Result = returnMessage;
+                                returnMessage = JsonSerializer.Serialize(response);
+                            }
+                            else
+                            {
+                                List<string> itemResult = [returnMessage];
+                                string serializedItemResult = JsonSerializer.Serialize(itemResult);
+                                response.Prompt = "Present the results as an HTML table. Make the heading gray background color gray. NO TOOL CALLS. Do not use MarkDown";
+                                response.Result = serializedItemResult;
+                                returnMessage = JsonSerializer.Serialize(response);
+                            }
+                        }
+                        else
+                        {
+                            string processedItem = itemToProcess.Prompt + " complete!";
+                            response.Prompt = "Present the result to the user. NO TOOL CALLS. Do not use MarkDown";
+                            response.Result = processedItem;
                             returnMessage = JsonSerializer.Serialize(response);
                         }
                     }
 
                     itemToProcess!.ItemStatus = Status.Closed;
                     chatSessionService.SaveOrchestration(orchestrationPlan);
+                    //ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
+                }
+                else
+                {
+                    returnMessage = string.Empty;
                 }
             }
             else

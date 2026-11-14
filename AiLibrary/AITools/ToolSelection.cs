@@ -4,16 +4,17 @@ using LocalAiLibrary.AiLibrary.ChatService.Models;
 using LocalAiLibrary.AiLibrary.Orchestration;
 using Microsoft.Extensions.Options;
 using Utilities.Email.EmailOperations;
+using Utilities.FileSystem;
 using Utilities.Logger;
 using Utilities.Repo;
 
 namespace LocalAiLibrary.AiLibrary.AITools
 {
     public  class ToolSelection(IChatSessionService chatSessionService,
-        IOptions<AiConfig> config, IEmail aiEmail, IRepo repo, 
+        IOptions<AiConfig> config, IEmail aiEmail, IRepo repo, IFileSystemManager fileSystemManager,
         IOrchestrationPlanManagement orchestrationPlanManagement, IUtilLogger logger) : IToolSelection
     {
-        private readonly ToolManager _toolManager = new(aiEmail, repo, config, logger);
+        private readonly ToolManager _toolManager = new(aiEmail, repo, fileSystemManager, config, chatSessionService, logger);
         private readonly AiConfig _config = config.Value;
 
         public async Task<string> ProcessToolCalls(ChatCompletionResponse response)
@@ -26,29 +27,58 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 if (command.ToolName == "send_email")
                 {
                     returnMessage = await _toolManager.SendEmail(command);
-                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false, string.Empty);
                 }
                 else if (command.ToolName == "get_person_address_schema")
                 {
-                    returnMessage = _toolManager.GetSchema(command, _config.PersonSchemaFilter);
+                    returnMessage = _toolManager.GetSchema(command, _config.AdventureWorks.PersonSchemaFilter);
                 }
                 else if (command.ToolName == "get_sales_schema")
                 {
-                    returnMessage = _toolManager.GetSchema(command, _config.SalesSchemaFilter);
+                    returnMessage = _toolManager.GetSchema(command, _config.AdventureWorks.SalesSchemaFilter);
                 }
                 else if (command.ToolName == "get_human_resources_schema")
                 {
-                    returnMessage = _toolManager.GetSchema(command, _config.HumanResourcesSchemaFilter);
+                    returnMessage = _toolManager.GetSchema(command, _config.AdventureWorks.HumanResourcesSchemaFilter);
+                }
+                else if (command.ToolName == "get_sentiment_analysis_schema")
+                {
+                    returnMessage = _toolManager.GetGemmaSchema(command);
+                }
+                else if (command.ToolName == "get_sentiment_score")
+                {
+                    returnMessage = _toolManager.GetSentimentScore(command);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, true, "noncollection");
                 }
                 else if (command.ToolName == "read_database")
                 {
                     returnMessage = await _toolManager.ReadDatabase(command);
-                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, true);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, true, "collection");
+                }
+                else if (command.ToolName == "insert_database")
+                {
+                    returnMessage = await _toolManager.InsertDatabase(command);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false, string.Empty);
                 }
                 else if (command.ToolName == "update_database")
                 {
                     returnMessage = await _toolManager.UpdateDatabase(command);
-                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false, string.Empty);
+                } 
+                else if (command.ToolName == "read_text_file")
+                {
+                    returnMessage = await _toolManager.ReadTextFile(command);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, true, "noncollection");
+                }
+                else if (command.ToolName == "delete_file")
+                {
+                    returnMessage = _toolManager.DeleteFile(command);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false, string.Empty);
+                }
+                else if (command.ToolName == "move_file")
+                {
+                    returnMessage = _toolManager.MoveFile(command);
+                    returnMessage = orchestrationPlanManagement.CacheToolResponse(returnMessage, false, string.Empty);
                 }
             }
 

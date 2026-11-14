@@ -7,7 +7,7 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
     {
         OrchestrationPlan? SaveOrchestrationPlan(ChatCompletionResponse? response);
         string ProcessOrchestration(OrchestrationPlan orchestrationPlan);
-        string CacheToolResponse(string returnMessage, bool isDataCall);
+        string CacheToolResponse(string returnMessage, bool isDataCall, string callType);
         string GetOrchestrationPrompt();
     }
 }

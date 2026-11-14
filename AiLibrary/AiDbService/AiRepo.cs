@@ -69,6 +69,18 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
             return chatCategories;
         }
 
+        public async Task<List<ChatApplication>?> GetChatApplications()
+        {
+            List<ChatApplication>? chatApplications = new List<ChatApplication>();
+            EntityOps ops = _repoHelper.GetEntityOps(_config.ProcGetChatApplications, _config.ConnectionString);
+            var chatApplicationDictionaryList = await repo.GetCollection(ops);
+
+            string jsonCategories = JsonSerializer.Serialize(chatApplicationDictionaryList);
+            chatApplications = DeserializerHelper.DeserializeItem<List<ChatApplication>>(jsonCategories);
+
+            return chatApplications;
+        }
+
         public async Task InsertGemmaEmailChatItem(string participant, string content, string role)
         {
             EntityOps ops = _repoHelper.GetEntityOps(_config.ProcInsertGemmaEmailChat, _config.ConnectionString);

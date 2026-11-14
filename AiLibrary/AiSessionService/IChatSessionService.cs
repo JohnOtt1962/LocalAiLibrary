@@ -9,10 +9,14 @@ namespace LocalAiLibrary.AiLibrary.AiSessionService
         Task<List<ChatRequestMessage>> GetHistory(string selectedCategoryId);
         void SaveHistory(List<ChatRequestMessage> history);
         Task<List<ChatCategory>?> GetCategories();
+        Task<List<ChatApplication>?> GetApplications();
         void SaveCategories(List<ChatCategory> categories);
         void ClearHistory();
+        void ClearOrchestration();
         void SaveOrchestration(OrchestrationPlan orchestrationPlan);
         OrchestrationPlan? GetOrchestration();
-        void ClearOrchestration();
+        string GetServiceName();
+        void SetServiceName(string serviceName);
+        void SetApplicationName(int applicationId);
     }
 }

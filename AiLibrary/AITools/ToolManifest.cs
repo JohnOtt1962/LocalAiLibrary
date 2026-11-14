@@ -11,6 +11,131 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 new Tool(
                     Type: "function",
                     Function: new FunctionDefinition(
+                        Name: "get_sentiment_score",
+
+                        Description:
+                        "Category: SentimentAnalysis. " +
+                        "You provide a sentiment score for a given customer review. " +
+                        "You MUST provide the sentiment arugment. " +
+                        "The score can be one of three values: Positive, Negative, or Neutral. " +
+                        "Never omit an argument. ",
+
+                        Parameters: new
+                        {
+                            type = "object",
+
+                            properties = new
+                            {
+                                sentiment = new
+                                {
+                                    type = "string",
+                                    description =
+                                        "REQUIRED. The sentiment score that you provide for a customer review. "
+                                }
+                            },
+
+                            required = new[] { "sentiment" },
+
+                            additionalProperties = false
+                        }
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
+                        Name: "read_text_file",
+
+                        Description:
+                            "Category: FileSystem. " +
+                            "Reads a file from the file system. " +
+                            "You MUST provide the file name for the argument. " +
+                            "Never omit an argument. ",
+
+                        Parameters: new
+                        {
+                            type = "object",
+
+                            properties = new
+                            {
+                                path = new
+                                {
+                                    type = "string",
+                                    description =
+                                        "REQUIRED. The name of the file to be read. "
+                                }
+                            },
+
+                            required = new[] { "path" },
+
+                            additionalProperties = false
+                        }
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
+                        Name: "delete_file",
+
+                        Description:
+                        "Category: FileSystem. " +
+                        "Deletes a file from the file system. " +
+                        "You MUST provide only the file name for the argument. " +
+                        "Never omit an argument. ",
+
+                        Parameters: new
+                        {
+                            type = "object",
+
+                            properties = new
+                            {
+                                path = new
+                                {
+                                    type = "string",
+                                    description =
+                                        "REQUIRED. The name of the file to be deleted. "
+                                }
+                            },
+
+                            required = new[] { "path" },
+
+                            additionalProperties = false
+                        }
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
+                        Name: "move_file",
+
+                        Description:
+                        "Category: FileSystem. " +
+                        "Tool automatically places file in a retirement folder. " +
+                        "You MUST provide only the file name for the path argument. " +
+                        "Never omit an argument. ",
+
+                        Parameters: new
+                        {
+                            type = "object",
+
+                            properties = new
+                            {
+                                path = new
+                                {
+                                    type = "string",
+                                    description =
+                                        "REQUIRED. The name of the file to move. "
+                                }
+                            },
+
+                            required = new[] { "path" },
+
+                            additionalProperties = false
+                        }
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
                         Name: "send_email",
 
                         Description:
@@ -92,6 +217,14 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 new Tool(
                     Type: "function",
                     Function: new FunctionDefinition(
+                        Name: "get_sentiment_analysis_schema",
+                        Description: "Category: Database Interaction. This tool will return all table names together with the foreign key constraints that exist within the sentiment analysis tables. There is nothing the agent needs to do here besides call the tool.",
+                        Parameters: new {}
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
                         Name: "read_database",
                         Description:
                         "Category: Database Interaction. " +
@@ -130,6 +263,22 @@ namespace LocalAiLibrary.AiLibrary.AITools
                             properties = new
                             {
                                 sql = new { type = "string", description = "An update statement against a database." },
+                            },
+                            required = new[] { "sql" }
+                        }
+                    )
+                ),
+                new Tool(
+                    Type: "function",
+                    Function: new FunctionDefinition(
+                        Name: "insert_database",
+                        Description: "Category: Database Interaction. You will generate an insert statement using TSQL. Every table in your query must be represented in the following way: [SchemaName].[TableName]. Ensure that column names you use in your sql statement belong to the tables you associate them with.",
+                        Parameters: new
+                        {
+                            type = "object",
+                            properties = new
+                            {
+                                sql = new { type = "string", description = "An insert statement against a database." },
                             },
                             required = new[] { "sql" }
                         }

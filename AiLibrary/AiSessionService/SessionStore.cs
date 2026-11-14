@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Text;
 
 namespace LocalAiLibrary.AiLibrary.AiSessionService
 {

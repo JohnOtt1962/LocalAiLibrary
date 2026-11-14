@@ -7,6 +7,7 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
     {
         Task<List<ChatRequestMessage>> GetConversationHistoryFromDb(string selectedCategoryId);
         Task<List<ChatCategory>?> GetChatCategories();
+        Task<List<ChatApplication>?> GetChatApplications();
         Task InsertConversationFragment(string role, string content);
         Task RemoveConversationFragment();
         Task<List<ChatRequestMessage>> GetGemmaEmailChatItem(string participant);

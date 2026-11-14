@@ -5,6 +5,7 @@ using LocalAiLibrary.AiLibrary.Helpers;
 using LocalAiLibrary.AiLibrary.Orchestration.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
+using Org.BouncyCastle.Asn1;
 
 namespace LocalAiLibrary.AiLibrary.AiSessionService;
 
@@ -13,14 +14,25 @@ public class ChatSessionService(IAiRepo aiRepo, IOptions<AiConfig> config, ISess
 {
     private const string SessionKey = "ChatHistory";
     private const string SessionCategoriesKey = "SessionCategories";
+    private const string SessionApplicationsKey = "SessionApplicationsKey";
     private const string OrchestrationPlanKey = "OrchestrationPlanKey";
     private readonly AiConfig _config = config.Value;
     private readonly DbOps _repoHelper = new();
-
+    
     public void SaveOrchestration(OrchestrationPlan orchestrationPlan)
     {
         var json = JsonSerializer.Serialize(orchestrationPlan);
         sessionStore.SaveObject(OrchestrationPlanKey, json);
+    }
+
+    public void SetServiceName(string serviceName)
+    {
+        sessionStore.SaveObject("ServiceName", serviceName);
+    }
+
+    public string GetServiceName()
+    {
+        return sessionStore.GetObject("ServiceName");
     }
 
     public OrchestrationPlan? GetOrchestration()
@@ -70,11 +82,8 @@ public class ChatSessionService(IAiRepo aiRepo, IOptions<AiConfig> config, ISess
 
         if (string.IsNullOrEmpty(json))
         {
-            if (_config.EnableDbCaching)
-            {
-                categories = await aiRepo.GetChatCategories();
-                if (categories != null) SaveCategories(categories);
-            }
+            categories = await aiRepo.GetChatCategories();
+            if (categories != null) SaveCategories(categories);
         }
         else
         {
@@ -88,6 +97,43 @@ public class ChatSessionService(IAiRepo aiRepo, IOptions<AiConfig> config, ISess
     {
         var json = JsonSerializer.Serialize(categories);
         sessionStore.SaveObject(SessionCategoriesKey, json);
+    }
+
+    public void SetApplicationName(int applicationId)
+    {
+        string applicationName = string.Empty;
+        var json = sessionStore.GetObject(SessionApplicationsKey);
+        List<ChatApplication>? applications = DeserializerHelper.DeserializeItem<List<ChatApplication>>(json);
+
+        ChatApplication? application = applications.FirstOrDefault(y => y.Id == applicationId);
+        if (application != null)
+            applicationName = application.Name;
+
+        SetServiceName(applicationName);
+    }
+
+    public async Task<List<ChatApplication>?> GetApplications()
+    {
+        var json = sessionStore.GetObject(SessionApplicationsKey);
+        List<ChatApplication>? applications = new List<ChatApplication>();
+
+        if (string.IsNullOrEmpty(json))
+        {
+            applications = await aiRepo.GetChatApplications();
+            if (applications != null) SaveApplications(applications);
+        }
+        else
+        {
+            applications = DeserializerHelper.DeserializeItem<List<ChatApplication>>(json);
+        }
+
+        return applications;
+    }
+
+    public void SaveApplications(List<ChatApplication> applications)
+    {
+        var json = JsonSerializer.Serialize(applications);
+        sessionStore.SaveObject(SessionApplicationsKey, json);
     }
 
     public void ClearHistory()

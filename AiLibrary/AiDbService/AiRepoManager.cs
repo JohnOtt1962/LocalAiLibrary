@@ -84,6 +84,26 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
             return chatCategories;
         }
 
+        public async Task<List<ChatApplication>?> GetChatApplications()
+        {
+            List<ChatApplication>? chatApplications = new List<ChatApplication>();
+
+            try
+            {
+                chatApplications = await _aiRepo.GetChatApplications();
+            }
+            catch (Exception ex)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                });
+            }
+
+            return chatApplications;
+        }
+
         public async Task<List<ChatRequestMessage>> GetGemmaEmailChatItem(string participant)
         {
             List<ChatRequestMessage> conversationHistory = new List<ChatRequestMessage>();
