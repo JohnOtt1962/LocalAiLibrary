@@ -11,8 +11,10 @@ namespace LocalAiLibrary.AiLibrary.Orchestration.Models
 
     public class OrchestrationPlan
     {
+        public string Id { get; set; } = string.Empty;
+        public int RetryCount { get; set; } = 0;
         [JsonPropertyName("items")]
-        public List<OrchestrationItem> Items { get; set; } = new List<OrchestrationItem>();
+        public List<OrchestrationItem>? Items { get; set; } = new List<OrchestrationItem>();
         public List<PayloadItem> PayloadItems { get; set; } = new List<PayloadItem>();
     }
 

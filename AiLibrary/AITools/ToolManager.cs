@@ -6,6 +6,7 @@ using LocalAiLibrary.AiLibrary.AITools.FileSystem;
 using LocalAiLibrary.AiLibrary.AITools.Models;
 using LocalAiLibrary.AiLibrary.AITools.Sentiment;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
+using LocalAiLibrary.AiLibrary.Orchestration.Models;
 using Microsoft.Extensions.Options;
 using Utilities.Email.EmailOperations;
 using Utilities.FileSystem;
@@ -41,7 +42,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
 
                 throw;
@@ -65,7 +66,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -87,7 +88,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -109,7 +110,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -131,7 +132,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -153,7 +154,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -176,7 +177,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -198,7 +199,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -220,7 +221,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -242,7 +243,7 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
@@ -264,11 +265,22 @@ namespace LocalAiLibrary.AiLibrary.AITools
                 _ = Task.Run(async () =>
                 {
                     await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure }, GetAgentId());
                 });
             }
 
             return retMessage;
+        }
+
+        private string GetAgentId()
+        {
+            string agentId = string.Empty;
+            OrchestrationPlan? orchestrationPlan = chatSessionService.GetOrchestration();
+
+            if (orchestrationPlan != null)
+                agentId = orchestrationPlan.Id;
+
+            return agentId;
         }
     }
 }

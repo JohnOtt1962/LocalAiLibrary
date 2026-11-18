@@ -48,6 +48,22 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
             }
         }
 
+        public async Task InsertOrchestrationFailure(string agentId, string orchestrationPlan)
+        {
+            try
+            {
+                await _aiRepo.InsertOrchestrationFailure(agentId, orchestrationPlan);
+            }
+            catch (Exception ex)
+            {
+                _ = Task.Run(async () =>
+                {
+                    await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
+                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
+                });
+            }
+        }
+
         public async Task RemoveConversationFragment()
         {
             try

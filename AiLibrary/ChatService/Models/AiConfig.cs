@@ -30,6 +30,8 @@
         public required AiSentimentAnalysis Sentiment { get; set; }
         public required AiAdventureWorks AdventureWorks { get; set; }
         public required AiChatCagetgory Category { get; set; }
+        public required int OrchestrationMaxRetry { get; set; }
+        public required string OrchestrationFailureProc { get; set; }
     }
 
     public class AiSentimentAnalysis

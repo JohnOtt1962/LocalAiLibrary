@@ -12,5 +12,6 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
         Task RemoveConversationFragment();
         Task<List<ChatRequestMessage>> GetGemmaEmailChatItem(string participant);
         Task InsertGemmaEmailChatItem(string participant, string content, string role);
+        Task InsertOrchestrationFailure(string agentId, string orchestrationPlan);
     }
 }

@@ -1,8 +1,9 @@
-﻿using System.Text.Json;
-using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
+﻿using LocalAiLibrary.AiLibrary.CategoryClassification.Models;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
 using LocalAiLibrary.AiLibrary.Helpers;
 using Microsoft.Extensions.Options;
+using System.Data;
+using System.Text.Json;
 using Utilities.Repo;
 using Utilities.Repo.Model;
 
@@ -37,6 +38,18 @@ namespace LocalAiLibrary.AiLibrary.AiDbService
                 conversationHistory.AddRange(messages);
 
             return conversationHistory;
+        }
+
+        public async Task InsertOrchestrationFailure(string agentId, string orchestrationPlan)
+        {
+            EntityOps ops = _repoHelper.GetEntityOps(_config.OrchestrationFailureProc, _config.ConnectionString);
+            ops.Params = new List<ParamItem>
+            {
+                _repoHelper.GetParamItem("AgentId", agentId , false, "varchar", 1),
+                _repoHelper.GetParamItem("OrchestrationPlan" , orchestrationPlan, false, "varchar", -1)
+            };
+
+            int result = await repo.Insert(ops);
         }
 
         public async Task InsertConversationFragment(string role, string content)

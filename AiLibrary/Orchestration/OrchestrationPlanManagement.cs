@@ -1,42 +1,28 @@
-﻿using LocalAiLibrary.AiLibrary.AiSessionService;
+﻿using LocalAiLibrary.AiLibrary.AiDbService;
+using LocalAiLibrary.AiLibrary.AiSessionService;
 using LocalAiLibrary.AiLibrary.AITools.Models;
 using LocalAiLibrary.AiLibrary.ChatService.Models;
-using LocalAiLibrary.AiLibrary.Helpers;
+using LocalAiLibrary.AiLibrary.Orchestration.Helpers;
 using LocalAiLibrary.AiLibrary.Orchestration.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using Utilities.Logger;
+using Utilities.Repo;
 
 namespace LocalAiLibrary.AiLibrary.Orchestration
 {
-    public class OrchestrationPlanManagement(IChatSessionService chatSessionService, IUtilLogger logger, IOptions<AiConfig> config) : IOrchestrationPlanManagement
+    public class OrchestrationPlanManagement(IChatSessionService chatSessionService, IUtilLogger logger, 
+        IOptions<AiConfig> config, IAiRepo aiRepo) : IOrchestrationPlanManagement
     {
+        private readonly OrchestrationPromptHelper _orchestrationPromptHelper = new();
+        private readonly OrchestrationHelper _orchestrationHelper = new(chatSessionService, logger, config);
         private readonly AiConfig _config = config.Value;
-
-        public OrchestrationPlan? SaveOrchestrationPlan(ChatCompletionResponse? response)
-        {
-            OrchestrationPlan? orchestrationPlan = null;
-            var functionArguments = response?.Choices[0].Message.ToolCalls?[0].Function.Arguments;
-
-            if (functionArguments != null)
-            {
-                orchestrationPlan = GetOrchestrationPlan(functionArguments);
-                if (orchestrationPlan != null)
-                    chatSessionService.SaveOrchestration(orchestrationPlan);
-
-                //if (orchestrationPlan != null)
-                //    ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
-            }
-
-            return orchestrationPlan;
-        }
 
         public string GetOrchestrationPrompt()
         {
             string chatPrompt = string.Empty;
 
             OrchestrationPlan? orchestrationPlan = chatSessionService.GetOrchestration();
-            //OrchestrationPlan? orchestrationPlan = ChatSessionService1.GetOrchestrationPlan();
 
             if (orchestrationPlan != null)
             {
@@ -79,7 +65,6 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
 
                 itemToProcess.ItemStatus = Status.Pending;
                 chatSessionService.SaveOrchestration(orchestrationPlan);
-                //ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
             }
             else if (currentPendingItem != null)
             {
@@ -97,10 +82,9 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
         {
             bool hasError = (returnMessage?.IndexOf("ERROR") > -1) ? true : false;
             OrchestrationPlan? orchestrationPlan = chatSessionService.GetOrchestration();
-            //OrchestrationPlan? orchestrationPlan = ChatSessionService1.GetOrchestrationPlan();
 
             string jsonOrch = JsonSerializer.Serialize(orchestrationPlan);
-            File.AppendAllText("D:\\Repos\\LocalAiChat_3\\LocalAiChat_3\\LogFile.txt", jsonOrch + Environment.NewLine + Environment.NewLine);
+            //File.AppendAllText("D:\\Repos\\LocalAiChat_3\\LocalAiChat_3\\LogFile.txt", jsonOrch + Environment.NewLine + Environment.NewLine);
 
             if (orchestrationPlan != null && !hasError)
             {
@@ -127,32 +111,16 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
                             orchestrationPlan.PayloadItems.Add(payloadItem);
 
                             if (callType == "collection")
-                            {
-                                response.Prompt = "Present the results as an HTML table. Make the heading gray background color gray. Do not use MarkDown";
-                                response.Result = returnMessage;
-                                returnMessage = JsonSerializer.Serialize(response);
-                            }
+                                returnMessage = _orchestrationPromptHelper.GetCollectionPrompt(response, returnMessage);
                             else
-                            {
-                                List<string> itemResult = [returnMessage];
-                                string serializedItemResult = JsonSerializer.Serialize(itemResult);
-                                response.Prompt = "Present the results as an HTML table. Make the heading gray background color gray. NO TOOL CALLS. Do not use MarkDown";
-                                response.Result = serializedItemResult;
-                                returnMessage = JsonSerializer.Serialize(response);
-                            }
+                                returnMessage = _orchestrationPromptHelper.GetNonCollectionPrompt(response, returnMessage);
                         }
                         else
-                        {
-                            string processedItem = itemToProcess.Prompt + " complete!";
-                            response.Prompt = "Present the result to the user. NO TOOL CALLS. Do not use MarkDown";
-                            response.Result = processedItem;
-                            returnMessage = JsonSerializer.Serialize(response);
-                        }
+                            returnMessage = _orchestrationPromptHelper.GetSilentPrompt(response, itemToProcess);
                     }
 
                     itemToProcess!.ItemStatus = Status.Closed;
                     chatSessionService.SaveOrchestration(orchestrationPlan);
-                    //ChatSessionService1.SetOrchestrationPlan(orchestrationPlan);
                 }
                 else
                 {
@@ -161,62 +129,35 @@ namespace LocalAiLibrary.AiLibrary.Orchestration
             }
             else
             {
-                File.AppendAllText("D:\\Repos\\LocalAiChat_3\\LocalAiChat_3\\LogFile.txt", "Error: " + returnMessage + Environment.NewLine + Environment.NewLine);
+                orchestrationPlan.RetryCount++;
+
+                if (orchestrationPlan.RetryCount > _config.OrchestrationMaxRetry)
+                {
+                    string serializedOrchPlan = JsonSerializer.Serialize(orchestrationPlan);
+                    aiRepo.InsertOrchestrationFailure(orchestrationPlan.Id, serializedOrchPlan);
+
+                    OrchestrationItem? itemToProcess =
+                        orchestrationPlan.Items.FirstOrDefault(y => y.ItemStatus == Status.Pending);
+
+                    returnMessage = _orchestrationPromptHelper.GetExceedRetryCountPrompt(orchestrationPlan);
+
+                    for (int i = 0; i <= orchestrationPlan.Items.Count - 1; i++)
+                        orchestrationPlan.Items[i].ItemStatus = Status.Closed;
+
+                    orchestrationPlan.RetryCount = 0;
+                }
+
+                chatSessionService.SaveOrchestration(orchestrationPlan);
+
+                //File.AppendAllText("D:\\Repos\\LocalAiChat_3\\LocalAiChat_3\\LogFile.txt", "Error: " + returnMessage + Environment.NewLine + Environment.NewLine);
             }
 
             return returnMessage;
         }
 
-        private OrchestrationPlan? GetOrchestrationPlan(string functionArguments)
+        public OrchestrationPlan? SaveOrchestrationPlan(ChatCompletionResponse? response)
         {
-            OrchestrationPlan? orchestrationPlan = null;
-
-            try
-            {
-                orchestrationPlan = DeserializerHelper.DeserializeItem<OrchestrationPlan>(functionArguments);
-
-                if (orchestrationPlan != null)
-                {
-                    for (int i = 0; i <= orchestrationPlan.Items.Count; i++)
-                    {
-                        if (orchestrationPlan.Items[i].CallIndex == 0)
-                            orchestrationPlan.Items[i].CallIndex = i + 1;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _ = Task.Run(async () =>
-                {
-                    await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
-                });
-            }
-
-            return orchestrationPlan;
-        }
-
-        private string GetPromptObject(string userPrompt)
-        {
-            string returnPrompt = userPrompt;
-
-            try
-            {
-                DataChat? dataChat = DeserializerHelper.DeserializeItem<DataChat>(userPrompt);
-
-                if (dataChat != null)
-                    returnPrompt = dataChat.Prompt;
-            }
-            catch (Exception ex)
-            {
-                _ = Task.Run(async () =>
-                {
-                    await logger.Log(ex.Message, ex, GetType().Name, LoggerBase.LogLevel.Warning,
-                        new ConnectionDetails { ConnectionString = _config.ConnectionString, ProcedureName = _config.LoggerProcedure });
-                });
-            }
-
-            return returnPrompt;
+            return _orchestrationHelper.SaveOrchestrationPlan(response);
         }
     }
 }
